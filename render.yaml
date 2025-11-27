@@ -1,0 +1,30 @@
+# render.yaml
+
+# Định nghĩa các dịch vụ sẽ được triển khai
+services:
+  # 1. Database (PostgreSQL)
+  - type: postgres
+    name: 2048_db
+    plan: free # Sử dụng gói miễn phí cho lúc đầu
+
+  # 2. Web Service (Django Application)
+  - type: web
+    name: django-2048-game
+    env: python
+    # Lệnh build.sh sẽ chạy trước
+    buildCommand: "./build.sh"
+    # Lệnh khởi động server Gunicorn (thay thế 'mysite' nếu tên thư mục gốc của bạn khác)
+    startCommand: "gunicorn mysite.wsgi:application"
+    plan: free
+    envVars:
+      # Lấy chuỗi kết nối Database từ dịch vụ Postgres
+      - key: DATABASE_URL
+        fromDatabase:
+          name: 2048_db
+          property: connectionString
+      # Tạo một SECRET_KEY ngẫu nhiên (RẤT QUAN TRỌNG)
+      - key: SECRET_KEY
+        generateValue: true
+      # Tên miền của dịch vụ Render (sẽ là tên dịch vụ + .onrender.com)
+      - key: WEB_HOST
+        value: "django-2048-game.onrender.com"
